@@ -1,0 +1,46 @@
+[User](email*, name, credit_card#);
+    User === {Creator, Backer};
+    User --> Employee_Verify_User;
+
+[Creator](country_of_origin);
+    <Creator_Creates_Project>();
+    Creator --- Creator_Creates_Project; /* Assume creator can create >=0 projects */
+    
+[Backer](address(street_name, house_number, zip_code, country_name));
+    <Backer_Funds_Project_With_Reward>(money_funded);
+    Backer --- Backer_Funds_Project_With_Reward; /* Not captured: Each backer funds each project exactly once */
+
+    Backer --- Backers_Request_Refund;
+    
+
+[Project](serial_ID*, name, funding_goal, deadline);
+    Project --- Backer_Funds_Project_With_Reward;
+    Project ==> Creator_Creates_Project; /* Assume projects are created by exactly 1 creator */
+    
+    <<Project_Has_Reward_Level>>();
+    Project === Project_Has_Reward_Level;
+    
+    Project --- Project_Provides_Updates;
+
+
+[[Reward_Level]](reward_name*, min_amount);
+    Reward_Level ==> Project_Has_Reward_Level;
+    Reward_Level --- Backer_Funds_Project_With_Reward;
+
+[[Updates]](content, datetime*);
+    <<Project_Provides_Updates>>(); /* I will exclude creator from this relationship at this point */
+    Updates ==> Project_Provides_Updates;
+
+[Refund](status);
+    <Backers_Request_Refund>(timestamp);
+    Refund ==> Backers_Request_Refund; /* Should this be weak entity */
+    Refund --> Employee_Process_Request;
+    
+[Employee](serial_ID*, name, monthly_salary);
+    <Employee_Process_Request>(timestamp);
+    <Employee_Verify_User>(date_of_verification);
+    Employee --- Employee_Verify_User;
+    Employee --- Employee_Process_Request;
+    
+
+/*[Reward](amt_backed);*/
