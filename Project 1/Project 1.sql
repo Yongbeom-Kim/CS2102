@@ -17,42 +17,34 @@ CREATE TABLE Backer (
 );
 
 CREATE TABLE Address (
-    id serial PRIMARY KEY,
+    id serial PRIMARY KEY, 
     street_name text NOT NULL,
     house_number text NOT NULL,
     zip_code integer NOT NULL,
     country_name text NOT NULL FOREIGN KEY REFERENCES Country(country_name)
 );
 
-CREATE TABLE Funding (
-    backer VARCHAR(319) NOT NULL FOREIGN KEY REFERENCES Backer(backer_email),
-    project integer NOT NULL FOREIGN KEY REFERENCES Project(project_id),
-    PRIMARY KEY (backer, project)
-);
-
 CREATE TABLE Project (
     project_id serial PRIMARY KEY,
     project_name text NOT NULL,
     funding_goal integer NOT NULL,
-    date_created timestamp NOT NULL,
+    time_created timestamp NOT NULL,
     deadline timestamp NOT NULL,
-    creator VARCHAR(319) NOT NULL FOREIGN KEY REFERENCES Creator(creator_email),
-    reward_name text NOT NULL,
-    FOREIGN KEY (project_id, reward_name) REFERENCES RewardLevel(reward_name, project_id)
+    creator VARCHAR(319) NOT NULL FOREIGN KEY REFERENCES Creator(creator_email)
 );
 
 CREATE TABLE FundReward (
     project serial NOT NULL FOREIGN KEY REFERENCES Project(project_id),
     backer VARCHAR(319) NOT NULL FOREIGN KEY REFERENCES Backer(backer_email),
     amount_pledged integer NOT NULL,
-    date_pledged timestamp NOT NULL,
+    time_pledged timestamp NOT NULL,
     PRIMARY KEY (project, backer),
     CONSTRAINT FK_RewardLevel
         FOREIGN KEY (project, reward_name) NOT NULL REFERENCES RewardLevel(reward_name, project),
     CONSTRAINT Project_Goal_Reached 
         CHECK (amount_pledged >= SELECT minimum_amount FROM RewardLevel WHERE RewardLevel(reward_name, project) = FK_RewardLevel)
     CONSTRAINT Pledge_Within_Project_Deadline
-        CHECK (date_pledged <= SELECT deadline FROM Project WHERE project_id = project)
+        CHECK (time_pledged <= SELECT deadline FROM Project WHERE project_id = project)
 );
 
 CREATE TABLE RewardLevel (
@@ -74,7 +66,7 @@ CREATE TABLE Refund (
     project serial NOT NULL FOREIGN KEY REFERENCES Project(project_id),
     time_requested timestamp NOT NULL,
     backer VARCHAR(319) NOT NULL FOREIGN KEY REFERENCES Backer(backer_email),
-    PRIMARY KEY (backer, project, time_requested),
+    PRIMARY KEY (backer, project),
     CONSTRAINT Refund_Request_Within_90_Days
         CHECK (time_requested <= DATEADD(day, 90, SELECT deadline FROM Project WHERE project_id = project))
 );
@@ -88,23 +80,21 @@ CREATE TABLE Employee (
 CREATE TABLE Pending (
     project serial NOT NULL FOREIGN KEY REFERENCES Project(project_id),
     backer VARCHAR(319) NOT NULL FOREIGN KEY REFERENCES Backer(backer_email),
-    time_requested timestamp NOT NULL,
     employee serial FOREIGN KEY REFERENCES Employee(employee_id),
     CONSTRAINT FK_Refund_Pending
-        FOREIGN KEY (backer, project, time_requested) NOT NULL REFERENCES Refund(backer, project, time_requested),
+        FOREIGN KEY (backer, project) NOT NULL REFERENCES Refund(backer, project),
     PRIMARY KEY (FK_Refund_Pending)
 );
 
 CREATE TABLE Processed (
     project serial NOT NULL FOREIGN KEY REFERENCES Project(project_id),
     backer VARCHAR(319) NOT NULL FOREIGN KEY REFERENCES Backer(backer_email),
-    time_requested timestamp NOT NULL,
     time_processed timestamp NOT NULL,
     employee serial FOREIGN KEY REFERENCES Employee(employee_id),
     CONSTRAINT FK_Refund_Processed
-        FOREIGN KEY (backer, project, time_requested) NOT NULL REFERENCES Refund(backer, project, time_requested),
+        FOREIGN KEY (backer, project) NOT NULL REFERENCES Refund(backer, project),
     PRIMARY KEY (FK_Refund_Processed),
-    approved boolean unique NOT NULL,
+    approved boolean NOT NULL,
     CONSTRAINT Refund_Process_Condition
         CHECK (approved = false OR (approved = true AND Project_Goal_Reached = true))
 );
