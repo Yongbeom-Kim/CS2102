@@ -1,25 +1,15 @@
--- \i C:/Users/yuan1/Documents/Study/2223sem1/CS2102/project/Project1.sql;
--- DROP SCHEMA public CASCADE;
--- CREATE SCHEMA public;
-
-
-
--- change the name of table (User --> Users)
 CREATE TABLE Users (
     user_name text NOT NULL,
     user_email VARCHAR(319) PRIMARY KEY,
-    cc_number1 integer NOT NULL,
-    cc_number2 integer
+    cc_number1 VARCHAR(20) NOT NULL,
+    cc_number2 VARCHAR(20)
 );
 
--- create Country table
 CREATE TABLE Country (
     country_name text PRIMARY KEY,
-    tax_code text NOT NULL
+    tax_codes integer UNIQUE NOT NULL
 );
 
--- adjust the position of Address
--- move FOREIGN KEY to a new line (same for other tables below)
 CREATE TABLE Address (
     id serial PRIMARY KEY, 
     street_name text NOT NULL,
@@ -29,7 +19,6 @@ CREATE TABLE Address (
     FOREIGN KEY (country_name) REFERENCES Country(country_name)
 );
 
--- remove project attribute and its foriegn key
 CREATE TABLE Creator (
     creator_email VARCHAR(319) PRIMARY KEY,
     origin_country text NOT NULL,
@@ -37,7 +26,6 @@ CREATE TABLE Creator (
     FOREIGN KEY (origin_country) REFERENCES Country(country_name)
 );
 
--- change the of backer_address (text --> serial)
 CREATE TABLE Backer (
     backer_email VARCHAR(319) NOT NULL PRIMARY KEY,
     backer_address serial NOT NULL,
@@ -53,7 +41,8 @@ CREATE TABLE Project (
     deadline timestamp NOT NULL,
     creator VARCHAR(319) NOT NULL,
     FOREIGN KEY (creator) REFERENCES Creator(creator_email),
-    UNIQUE(project_id, deadline)
+    UNIQUE(project_id, deadline),
+    CHECK (time_created <= deadline)
 );
 
 CREATE TABLE GoalReachedProject (
@@ -110,9 +99,9 @@ CREATE TABLE Employee (
 CREATE TABLE Pending (
     project serial NOT NULL,
     FOREIGN KEY (project) REFERENCES Project(project_id),
-    time_requested timestamp NOT NULL,
     backer VARCHAR(319) NOT NULL,
     FOREIGN KEY (backer) REFERENCES Backer(backer_email),
+    time_requested timestamp NOT NULL,
     employee serial,
     FOREIGN KEY (employee) REFERENCES Employee(employee_id),
     PRIMARY KEY (backer, project),
@@ -138,10 +127,8 @@ CREATE TABLE Processed (
     approved boolean NOT NULL,
     goal_project serial NOT NULL,
     FOREIGN KEY (goal_project) REFERENCES GoalReachedProject(project_id),
-    CONSTRAINT Refund_Request_Within_90_Days
-        CHECK (time_requested <= deadline + 90 * INTERVAL '1 day' ),
     CONSTRAINT Refund_Process_Condition
-        CHECK (approved = false OR (approved = true AND project = goal_project))
+        CHECK (approved = false OR (approved = true AND project = goal_project AND time_requested <= deadline + 90 * INTERVAL '1 day'))
 );
 
 CREATE TABLE Verify (
