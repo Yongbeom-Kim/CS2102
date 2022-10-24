@@ -1,32 +1,34 @@
 /* ----- TRIGGERS     ----- */
 /* Trigger 5*/
 CREATE
-OR REPLACE FUNCTION check_back() RETURNS TRIGGER AS $ $ DECLARE created DATE;
+OR REPLACE FUNCTION check_back() RETURNS TRIGGER AS $$ 
+DECLARE created DATE;
 
-deadline DATE;
+back_date DATE;
 
 min_amt NUMERIC;
 
 BEGIN
 SELECT
-  deadline,
-  created INTO deadline,
+  p.deadline,
+  p.created INTO back_date,
   created
 FROM
-  Projects
+  Projects AS p
 WHERE
   id = NEW.id;
 
 SELECT
-  min_amt INTO min_amt
+  r.min_amt INTO min_amt
 FROM
-  Rewards
+  Rewards as r
 WHERE
   id = NEW.id
   AND name = NEW.name;
 
 IF (created <= NEW.backing)
-AND (NEW.backing <= deadline)
+AND (NEW.backing <= back_date)
+AND (min_amt <> null)
 AND (NEW.amount >= min_amt) THEN RETURN NEW;
 
 ELSE RETURN NULL;
@@ -35,9 +37,10 @@ END IF;
 
 END;
 
-$ $ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
-CREATE TRIGGER back_project BEFORE
+CREATE
+OR REPLACE TRIGGER back_project BEFORE
 INSERT
   OR
 UPDATE
