@@ -1,6 +1,6 @@
 /* ----- TRIGGERS     ----- */
 
--- Trigger 2
+-- Trigger 3
 CREATE OR REPLACE FUNCTION check_min_reward_level()
 RETURN TRIGGER AS $$
 BEGIN
@@ -15,7 +15,7 @@ AFTER INSERT ON Projects
 DEFERRABLE INITIALLY DEFERRED
 FOR EACH ROW EXECUTE FUNCTION check_min_reward_level();
 
--- Trigger 3
+-- Trigger 4
 CREATE OR REPLACE FUNCTION check_refund_date()
 RETURN TRIGGER AS $$
 BEGIN
