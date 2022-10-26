@@ -1,4 +1,31 @@
 /* ----- TRIGGERS     ----- */
+-- Q1
+CREATE OR REPLACE FUNCTION check_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NOT (EXISTS (SELECT email FROM Backers b WHERE b.email = NEW.email) OR EXISTS (SELECT email FROM Creators c WHERE c.email = NEW.email)) THEN
+    DELETE FROM Users u WHERE u.email = NEW.email;
+  END IF; RETURN NULL;
+END; $$ LANGUAGE plpgsql;
+
+DROP TRIGGER Q1 on Users;
+CREATE CONSTRAINT TRIGGER Q1
+AFTER INSERT ON Users
+DEFERRABLE INITIALLY DEFERRED
+FOR EACH ROW EXECUTE FUNCTION check_user();
+
+-- Q2
+CREATE OR REPLACE FUNCTION check_min_amt()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF (NEW.amount >= (SELECT min_amt FROM Rewards r WHERE r.name = NEW.name AND r.id = NEW.id)) THEN
+    RETURN NEW;
+  END IF; RETURN NULL;
+END; $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER Q2
+BEFORE INSERT ON Backs
+FOR EACH ROW EXECUTE FUNCTION check_min_amt();
 
 
 /* ------------------------ */
