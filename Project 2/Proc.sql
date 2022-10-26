@@ -18,8 +18,8 @@ WHERE id = NEW.id AND name = NEW.name;
 
 IF (created <= NEW.backing)
 AND (NEW.backing <= back_date)
-AND (min_amt <> null)
-AND (NEW.amount >= min_amt) THEN RETURN NEW;
+AND (min_amt is not null)
+THEN RETURN NEW;
 
 ELSE RETURN NULL;
 
