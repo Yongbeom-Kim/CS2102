@@ -70,7 +70,30 @@ CREATE OR REPLACE PROCEDURE add_user(
 ) AS $$
 -- add declaration here
 BEGIN
-  -- your code here
+  -- check user
+  IF (email is not null AND name is not null AND cc1 is not null) THEN
+  -- add if user does not exist in table 
+    IF (NOT ANY(SELECT * FROM Users as u WHERE u.email = email)) THEN
+      INSERT INTO Users(email, name, cc1, cc2) VALUES (email, name, cc1, cc2);
+    END IF;
+  END IF;
+  -- the following can only be done if the user EXISTS
+  IF (ANY(SELECT * FROM Users as u WHERE u.email = email)) THEN
+    -- if Creator, check creator and then add
+    IF (kind = 'BACKER') THEN
+      IF (street is not null AND num is not null AND zip is not null AND country is not null) THEN
+        IF (NOT ANY(SELECT * FROM Backers as b WHERE b.email = email)) THEN
+          INSERT INTO Backers(email, street, num, zup, country);
+      END IF;
+    END IF;
+    -- if backer , check backer and then add
+    IF (kind = 'CREATOR') THEN
+      IF (country is not null) THEN
+        IF (NOT ANY(SELECT * FROM Creators as c WHERE c.email = email)) THEN
+          INSERT INTO Creators(email,country);
+      END IF;
+    END IF;
+  END IF;
 END;
 $$ LANGUAGE plpgsql;
 
