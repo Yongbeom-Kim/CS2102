@@ -99,7 +99,6 @@ END
 $$ LANGUAGE plpgsql;
 
 
-
 /* Procedure #2 */
 CREATE OR REPLACE PROCEDURE add_project(
   id      INT,     email TEXT,   ptype    TEXT,
