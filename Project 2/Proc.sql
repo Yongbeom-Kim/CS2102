@@ -68,33 +68,34 @@ CREATE OR REPLACE PROCEDURE add_user(
   cc2   TEXT, street  TEXT, num  TEXT,
   zip   TEXT, country TEXT, kind TEXT
 ) AS $$
--- add declaration here
 BEGIN
-  -- check user
+  /* check user */
   IF (email is not null AND name is not null AND cc1 is not null) THEN
   -- add if user does not exist in table 
-    IF (NOT ANY(SELECT * FROM Users as u WHERE u.email = email)) THEN
+    IF (NOT EXISTS(SELECT email FROM Users as u WHERE u.email = email) = true) THEN
       INSERT INTO Users(email, name, cc1, cc2) VALUES (email, name, cc1, cc2);
     END IF;
   END IF;
-  -- the following can only be done if the user EXISTS
-  IF (ANY(SELECT * FROM Users as u WHERE u.email = email)) THEN
-    -- if Creator, check creator and then add
+  /* the following can only be done if the user EXISTS */
+  IF (EXISTS(SELECT * FROM Users as u WHERE u.email = email)) THEN
+    /* if Creator, check creator and then add */
     IF (kind = 'BACKER') THEN
       IF (street is not null AND num is not null AND zip is not null AND country is not null) THEN
-        IF (NOT ANY(SELECT * FROM Backers as b WHERE b.email = email)) THEN
-          INSERT INTO Backers(email, street, num, zup, country);
+        IF (NOT EXISTS(SELECT * FROM Backers as b WHERE b.email = email)) THEN
+          INSERT INTO Backers(email, street, num, zip, country) VALUES(email, street, num, zip, country);
       END IF;
     END IF;
-    -- if backer , check backer and then add
+	END IF;
+    /* if backer , check backer and then add */
     IF (kind = 'CREATOR') THEN
       IF (country is not null) THEN
-        IF (NOT ANY(SELECT * FROM Creators as c WHERE c.email = email)) THEN
-          INSERT INTO Creators(email,country);
+        IF (NOT EXISTS(SELECT * FROM Creators as c WHERE c.email = email)) THEN
+          INSERT INTO Creators(email,country) VALUES(email, country);
       END IF;
     END IF;
   END IF;
-END;
+  END IF;
+END
 $$ LANGUAGE plpgsql;
 
 
