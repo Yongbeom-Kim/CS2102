@@ -88,8 +88,9 @@ $$ language plpgsql;
 
 CREATE OR REPLACE TRIGGER refund_only_successful
 BEFORE UPDATE ON Backs
-WHEN NEW.request IS NOT NULL
-FOR EACH ROW EXECUTE FUNCTION check_successful();
+FOR EACH ROW 
+  WHEN (NEW.request IS NOT NULL)
+  EXECUTE FUNCTION check_successful();
 
 
 /* ----- PROECEDURES  ----- */
