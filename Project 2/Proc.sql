@@ -61,6 +61,37 @@ CREATE OR REPLACE TRIGGER back_project
 BEFORE INSERT OR UPDATE ON Backs 
 FOR EACH ROW EXECUTE FUNCTION check_back();
 
+
+/* Trigger 6 */
+/* 6. Backers can only request for refund on successful projects. You need to
+create an UPDATE trigger here. You may assume that the only change is
+to set the Backs.backing from NULL to non-NULL values.
+*/
+CREATE OR REPLACE FUNCTION check_successful()
+RETURNS TRIGGER AS $$
+
+DECLARE
+project_backed RECORD;
+amt_pleged INT;
+
+BEGIN
+project_backed := (SELECT * FROM Projects where id = OLD.id);
+amt_pleged := (SELECT SUM(amount) FROM Backs b where b.id = project_backed.id);
+
+if (amt_pleged < project_backed.goal OR project_backed.deadline < CURRENT_DATE)
+  THEN RETURN NULL;
+
+END IF;
+
+END;
+$$ language plpgsql;
+
+CREATE OR REPLACE TRIGGER refund_only_successful
+BEFORE UPDATE ON Backs
+WHEN NEW.request IS NOT NULL
+FOR EACH ROW EXECUTE FUNCTION check_successful();
+
+
 /* ----- PROECEDURES  ----- */
 /* Procedure #1 */
 CREATE OR REPLACE PROCEDURE add_user(
