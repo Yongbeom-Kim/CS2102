@@ -1,6 +1,9 @@
 -- Reset DB
 \i DDL.sql
-do $$ BEGIN
+do $$ 
+DECLARE
+    PROJECT_TYPE_NUMBER INT := 3;
+BEGIN
 
     -- USERS Table
     DECLARE
@@ -100,6 +103,21 @@ do $$ BEGIN
         CLOSE curs1;
     END;
 
+    DECLARE
+        s TEXT;
+        id INT;
+    BEGIN
+        FOR i in 1..PROJECT_TYPE_NUMBER LOOP
+
+            id := (SELECT e.id FROM Employees e ORDER BY random() LIMIT 1);
+            s := CAST(i as TEXT);
+
+            INSERT INTO ProjectTypes (name, id)
+                VALUES (s, id);
+
+        END LOOP;
+    END;
+
 END; $$;
 
 select * from users;
@@ -107,3 +125,4 @@ select * from employees;
 select * from backers;
 select * from creators;
 select * from verifies;
+select * from projecttypes;
