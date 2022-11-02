@@ -1,8 +1,10 @@
 -- Reset DB
 \i DDL.sql
 do $$ 
+-- Global variables (settings)
 DECLARE
     PROJECT_TYPE_NUMBER INT := 3;
+
 BEGIN
 
     -- USERS Table
