@@ -89,7 +89,7 @@ $$ language plpgsql;
 CREATE OR REPLACE TRIGGER refund_only_successful
 BEFORE UPDATE ON Backs
 FOR EACH ROW 
-  WHEN (NEW.request IS NOT NULL)
+  WHEN ((OLD.request IS NULL) AND (NEW.request IS NOT NULL))
   EXECUTE FUNCTION check_successful();
 
 
@@ -184,21 +184,19 @@ CREATE OR REPLACE FUNCTION find_top_popular(
   n INT, today DATE, ptype TEXT
 ) RETURNS TABLE(id INT, name TEXT, email TEXT,
                 days INT) AS $$
-DECLARE
-  
--- add declaration here
 BEGIN
   RETURN QUERY
-  SELECT p1.id, (MIN(b1.request) - p1.created) as days
-  FROM Backs b1 
-      JOIN Backs b2 ON b2.id = b1.id AND b2.request <= b1.request
-      JOIN Projects p1 on p1.id = b1.id
-  GROUP BY b1.request, p1.id, p1.goal, p1.id, p1.created
-  HAVING SUM(b2.amount) >= p1.goal
-      AND p1.ptype = ptype
-      AND p1.created < today
-  ORDER BY (MIN(b1.request) - p1.created) ASC,
-      p1.id ASC
+  SELECT id, name, email, MIN(days) as days FROM 
+    (SELECT p1.id, p1.name, p1.email (b1.request - p1.created) as days
+    FROM Backs b1 
+        JOIN Backs b2 ON b2.id = b1.id AND b2.request <= b1.request
+        JOIN Projects p1 on p1.id = b1.id
+    GROUP BY b1.request, p1.id, p1.goal, p1.id, p1.created
+    HAVING SUM(b2.amount) >= p1.goal
+        AND p1.ptype = ptype
+        AND p1.created < today) subq
+  ORDER BY (min(days)) ASC,
+      id ASC
   LIMIT n;
 END;
 $$ LANGUAGE plpgsql;
