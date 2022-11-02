@@ -1,12 +1,6 @@
+-- Reset DB
 \i DDL.sql
 do $$ BEGIN
-    -- Reset DB
-    -- BEGIN
-        -- DELETE FROM Creators;
-        -- DELETE FROM Backers;
-        -- DELETE FROM Users;
-        -- \i DDL.sql;
-    -- END;
 
     -- USERS Table
     DECLARE
@@ -25,7 +19,7 @@ do $$ BEGIN
     DECLARE
         s TEXT;
     BEGIN
-        FOR i in 1..10 LOOP
+        FOR i in 1..3 LOOP
             s := CAST(i AS TEXT);
             -- raise notice 'cnt: %', r;
             INSERT INTO Employees (id, name, salary)
@@ -82,9 +76,34 @@ do $$ BEGIN
         END LOOP;
         CLOSE curs;
     END;
+
+    -- Verifies Table
+    DECLARE
+        id INT;
+        email TEXT;
+        curs1 refcursor;    
+        curs2 refcursor;
+    
+    BEGIN
+        OPEN curs1 FOR (SELECT u.email FROM Users u);
+        LOOP
+
+            FETCH curs1 INTO email;
+            EXIT WHEN NOT FOUND;
+
+            id := (SELECT e.id FROM Employees e ORDER BY random() LIMIT 1);
+
+            INSERT INTO Verifies (email, id, verified) VALUES
+                (email, id , '2000-01-10');
+
+        END LOOP;
+        CLOSE curs1;
+    END;
+
 END; $$;
 
 select * from users;
 select * from employees;
 select * from backers;
 select * from creators;
+select * from verifies;
