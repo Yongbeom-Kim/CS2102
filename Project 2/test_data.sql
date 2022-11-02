@@ -105,6 +105,7 @@ BEGIN
         CLOSE curs1;
     END;
 
+    -- Project Type Table
     DECLARE
         s TEXT;
         id INT;
@@ -120,11 +121,41 @@ BEGIN
         END LOOP;
     END;
 
+    -- Projects table
+    DECLARE
+        s TEXT;
+        email TEXT;
+        ptype TEXT;
+        i INT;
+
+        curs refcursor;
+
+    BEGIN
+        OPEN curs FOR (SELECT c.email FROM creators c);
+        i := 1;
+        
+        LOOP
+            FETCH curs INTO email;
+            EXIT WHEN NOT FOUND;
+            s := CAST(i AS TEXT);
+
+            ptype := (SELECT p.name from ProjectTypes p ORDER BY random() LIMIT 1);
+
+            INSERT INTO Projects 
+                (id, email, ptype, created, name, deadline, goal)
+                VALUES
+                (i, email, ptype, '2000-01-01', 'name', '2000-02-02', 1000);
+
+            i := i + 1;
+        END LOOP;
+        CLOSE curs;
+    END;
 END; $$;
 
-select * from users;
-select * from employees;
-select * from backers;
-select * from creators;
-select * from verifies;
-select * from projecttypes;
+-- select * from users;
+-- select * from employees;
+-- select * from backers;
+-- select * from creators;
+-- select * from verifies;
+-- select * from projecttypes;
+select * from projects;
