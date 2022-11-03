@@ -187,11 +187,11 @@ CREATE OR REPLACE FUNCTION find_top_popular(
 BEGIN
   RETURN QUERY
   SELECT id, name, email, MIN(days) as days FROM 
-    (SELECT p1.id, p1.name, p1.email (b1.request - p1.created) as days
+    (SELECT p1.id, p1.name, p1.email (b1.backing - p1.created) as days
     FROM Backs b1 
-        JOIN Backs b2 ON b2.id = b1.id AND b2.request <= b1.request
+        JOIN Backs b2 ON b2.id = b1.id AND b2.backing <= b1.backing
         JOIN Projects p1 on p1.id = b1.id
-    GROUP BY b1.request, p1.id, p1.goal, p1.id, p1.created
+    GROUP BY b1.backing, p1.id, p1.goal, p1.id, p1.created
     HAVING SUM(b2.amount) >= p1.goal
         AND p1.ptype = ptype
         AND p1.created < today) subq
