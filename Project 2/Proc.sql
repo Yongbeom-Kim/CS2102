@@ -79,7 +79,7 @@ BEGIN
   /* the following can only be done if the user EXISTS */
   IF (EXISTS(SELECT * FROM Users as u WHERE u.email = email)) THEN
     /* if Creator, check creator and then add */
-    IF (kind = 'BACKER') THEN
+    IF (kind = 'BACKER' or kind = 'BOTH') THEN
       IF (street is not null AND num is not null AND zip is not null AND country is not null) THEN
         IF (NOT EXISTS(SELECT * FROM Backers as b WHERE b.email = email)) THEN
           INSERT INTO Backers(email, street, num, zip, country) VALUES(email, street, num, zip, country);
@@ -87,7 +87,7 @@ BEGIN
     END IF;
 	END IF;
     /* if backer , check backer and then add */
-    IF (kind = 'CREATOR') THEN
+    IF (kind = 'CREATOR' or kind = 'BOTH') THEN
       IF (country is not null) THEN
         IF (NOT EXISTS(SELECT * FROM Creators as c WHERE c.email = email)) THEN
           INSERT INTO Creators(email,country) VALUES(email, country);
