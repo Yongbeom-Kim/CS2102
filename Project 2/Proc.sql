@@ -27,6 +27,35 @@ CREATE OR REPLACE TRIGGER Q2
 BEFORE INSERT ON Backs
 FOR EACH ROW EXECUTE FUNCTION check_min_amt();
 
+-- Trigger 3
+CREATE OR REPLACE FUNCTION check_min_reward_level()
+RETURN TRIGGER AS $$
+BEGIN
+  IF NOT EXISTS (SELECT id FROM Rewards r WHERE r.id = NEW.id) THEN
+    DELETE FROM Projects p WHERE p.id = NEW.id;
+  END IF; RETURN NULL;
+END; $$ LANGUAGE plpgsql;
+
+DROP TRIGGER check_min_reward_level on Projects;
+CREATE CONSTRAINT TRIGGER check_min_reward_level
+AFTER INSERT ON Projects
+DEFERRABLE INITIALLY DEFERRED
+FOR EACH ROW EXECUTE FUNCTION check_min_reward_level();
+
+-- Trigger 4
+CREATE OR REPLACE FUNCTION check_refund_date()
+RETURN TRIGGER AS $$
+BEGIN
+  IF ((SELECT request FROM Backs b WHERE b.email = NEW.email AND b.id = NEW.pid) IS NOT NULL
+  AND ((SELECT request FROM Backs b WHERE b.email = NEW.email AND b.id = NEW.pid) > (SELECT deadline FROM Projects p WHERE p.id = NEW.pid) + 90 AND NEW.accepted = FALSE) 
+      OR (SELECT request FROM Backs b WHERE b.email = NEW.email AND b.id = NEW.pid) <= (SELECT deadline FROM Projects p WHERE p.id = NEW.pid) + 90) THEN RETURN NEW;
+  END IF; RETURN NULL;
+END; $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER check_refund_date
+BEFORE INSERT ON Refunds
+FOR EACH ROW EXECUTE FUNCTION check_refund_date();
+
 /* Trigger 5*/
 CREATE OR REPLACE FUNCTION check_back() 
 RETURNS TRIGGER AS $$ 
