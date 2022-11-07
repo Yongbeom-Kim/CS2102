@@ -101,7 +101,7 @@ RETURNS TRIGGER AS $$
 
 DECLARE
 project_backed RECORD;
-amt_pleged INT;
+amt_pleged NUMERIC;
 
 BEGIN
 project_backed := (SELECT * FROM Projects where id = OLD.id);
