@@ -44,7 +44,7 @@ SELECT r.min_amt INTO min_amt
 FROM Rewards as r
 WHERE id = NEW.id AND name = NEW.name;
 
-IF (created <= NEW.backing)
+IF (created < NEW.backing)
 AND (NEW.backing <= back_date)
 AND (min_amt is not null)
 THEN RETURN NEW;
