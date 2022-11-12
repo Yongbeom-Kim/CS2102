@@ -28,7 +28,7 @@ BEFORE INSERT ON Backs
 FOR EACH ROW EXECUTE FUNCTION check_min_amt();
 
 -- Trigger 3
-CREATE OR REPLACE FUNCTION check_min_reward_level()
+CREATE OR REPLACE FUNCTION check_min_reward_level_fn()
 RETURN TRIGGER AS $$
 BEGIN
   IF NOT EXISTS (SELECT id FROM Rewards r WHERE r.id = NEW.id) THEN
@@ -36,15 +36,15 @@ BEGIN
   END IF; RETURN NULL;
 END; $$ LANGUAGE plpgsql;
 
-DROP TRIGGER check_min_reward_level on Projects;
+DROP TRIGGER IF EXISTS check_min_reward_level on Projects;
 CREATE CONSTRAINT TRIGGER check_min_reward_level
 AFTER INSERT ON Projects
 DEFERRABLE INITIALLY DEFERRED
-FOR EACH ROW EXECUTE FUNCTION check_min_reward_level();
+FOR EACH ROW EXECUTE FUNCTION check_min_reward_level_fn();
 
 -- Trigger 4
 CREATE OR REPLACE FUNCTION check_refund_date()
-RETURN TRIGGER AS $$
+RETURNS TRIGGER AS $$
 BEGIN
   IF ((SELECT request FROM Backs b WHERE b.email = NEW.email AND b.id = NEW.pid) IS NOT NULL
   AND ((SELECT request FROM Backs b WHERE b.email = NEW.email AND b.id = NEW.pid) > (SELECT deadline FROM Projects p WHERE p.id = NEW.pid) + 90 AND NEW.accepted = FALSE) 
@@ -104,7 +104,7 @@ project_backed RECORD;
 amt_pleged NUMERIC;
 
 BEGIN
-project_backed := (SELECT * FROM Projects where id = OLD.id);
+SELECT * INTO project_backed FROM Projects where id = OLD.id;
 amt_pleged := (SELECT SUM(amount) FROM Backs b where b.id = project_backed.id);
 
 if (amt_pleged < project_backed.goal OR project_backed.deadline < CURRENT_DATE)
