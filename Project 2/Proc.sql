@@ -73,7 +73,7 @@ SELECT r.min_amt INTO min_amt
 FROM Rewards as r
 WHERE id = NEW.id AND name = NEW.name;
 
-IF (created <= NEW.backing)
+IF (created < NEW.backing)
 AND (NEW.backing <= back_date)
 AND (min_amt is not null)
 THEN RETURN NEW;
@@ -124,17 +124,51 @@ FOR EACH ROW
 
 /* ----- PROECEDURES  ----- */
 /* Procedure #1 */
+DROP PROCEDURE add_new_user(text, text, text, text);
+DROP PROCEDURE add_user(text,text,text,text,text,text,text,text,text);
+
+CREATE OR REPLACE PROCEDURE add_new_user(
+email_ TEXT, name TEXT, cc1 TEXT, cc2 TEXT
+) AS $$
+BEGIN
+  /* check user */
+  IF (email_ is not null AND name is not null AND cc1 is not null) THEN
+  -- add if user does not exist in table 
+    IF (NOT EXISTS(SELECT * FROM Users as u WHERE u.email = email_) = true) THEN
+      INSERT INTO Users VALUES(email_, name, cc1, cc2);
+    END IF;
+  END IF;
+END
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE PROCEDURE add_user(
-  email TEXT, name    TEXT, cc1  TEXT,
+  email_ TEXT, name    TEXT, cc1  TEXT,
   cc2   TEXT, street  TEXT, num  TEXT,
   zip   TEXT, country TEXT, kind TEXT
 ) AS $$
--- add declaration here
 BEGIN
-  -- your code here
-END;
+  CALL add_new_user(email_, name, cc1, cc2);
+  /* the following can only be done if the user EXISTS */
+  IF (EXISTS(SELECT * FROM Users as u WHERE u.email = email_)) THEN
+    /* if Creator, check creator and then add */
+    IF (kind = 'BACKER' or kind = 'BOTH') THEN
+      IF (street is not null AND num is not null AND zip is not null AND country is not null) THEN
+        IF (NOT EXISTS(SELECT * FROM Backers as b WHERE b.email = email_)) THEN
+          INSERT INTO Backers VALUES(email_, street, num, zip, country);
+      END IF;
+    END IF;
+	END IF;
+    /* if backer , check backer and then add */
+    IF (kind = 'CREATOR' or kind = 'BOTH') THEN
+      IF (country is not null) THEN
+        IF (NOT EXISTS(SELECT * FROM Creators as c WHERE c.email = email_)) THEN
+          INSERT INTO Creators VALUES(email_, country);
+      END IF;
+    END IF;
+  END IF;
+  END IF;
+END
 $$ LANGUAGE plpgsql;
-
 
 
 /* Procedure #2 */

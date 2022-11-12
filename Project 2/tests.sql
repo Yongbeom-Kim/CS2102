@@ -71,3 +71,18 @@ VALUES
         NULL,
         180
     );
+
+
+/* Procedure 1 */
+-- Success case: Add new backer (user does not exist)
+CALL add_user('p1t1@123.com', 'p1t1', '123456', null, 'street', '1234', '12345', 'country', 'BACKER');
+-- Success case: Add new creator (user exists)
+CALL add_user('p1t1@123.com', 'p1t1', '123456', null, 'street', '1234', '12345', 'country', 'CREATOR');
+-- Success case: Add both (user does not exist)
+CALL add_user('p1t1_2@123.com', 'p1t1', '123456', null, 'street', '1234', '12345', 'country', 'BOTH');
+-- No Change to DB: Add both (creator and backer already exist)
+CALL add_user('p1t1_2@123.com', 'p1t1', '123456789', null, 'street123', '1234', '12345', 'country', 'BOTH');
+-- Failure case: Add backer (missing information - street)
+-- Failure case: Add creator (missing information)
+CALL add_user('p1t1_23@12356.com', 'p1t1', '123456789', null, null, '1234', '12345', null, 'BOTH');
+
